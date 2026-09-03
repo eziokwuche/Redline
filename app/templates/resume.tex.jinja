@@ -1,0 +1,171 @@
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\pdfgentounicode=1
+
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+\BLOCK{set contacts = []}
+\BLOCK{if phone}
+  \BLOCK{set contacts = contacts + [('phone', phone)]}
+\BLOCK{endif}
+\BLOCK{if email}
+  \BLOCK{set contacts = contacts + [('email', email)]}
+\BLOCK{endif}
+\BLOCK{if linkedin}
+  \BLOCK{set contacts = contacts + [('linkedin', linkedin)]}
+\BLOCK{endif}
+\BLOCK{if github}
+  \BLOCK{set contacts = contacts + [('github', github)]}
+\BLOCK{endif}
+
+\begin{center}
+    \BLOCK{if name}
+    \textbf{\Huge \scshape \VAR{name}} \\ \vspace{1pt}
+    \BLOCK{endif}
+    \BLOCK{if contacts}
+    \small
+    \BLOCK{for contact_type, contact_value in contacts}
+      \BLOCK{if contact_type == 'email'}
+      \href{mailto:\VAR{contact_value}}{\underline{\VAR{contact_value|escape_latex}}}
+      \BLOCK{elif contact_type == 'linkedin' or contact_type == 'github'}
+      \href{\VAR{contact_value}}{\underline{\VAR{contact_value|escape_latex}}}
+      \BLOCK{else}
+      \VAR{contact_value}
+      \BLOCK{endif}
+      \BLOCK{if not loop.last} $|$ \BLOCK{endif}
+    \BLOCK{endfor}
+    \BLOCK{endif}
+\end{center}
+
+\BLOCK{if education}
+  \section{Education}
+    \resumeSubHeadingListStart
+      \BLOCK{for education_entry in education}
+      \resumeSubheading
+        {\VAR{education_entry.institution}}{\VAR{education_entry.location}}
+        {\VAR{education_entry.degree}}{\VAR{education_entry.dates}}
+      \BLOCK{endfor}
+    \resumeSubHeadingListEnd
+\BLOCK{endif}
+
+\BLOCK{if experience}
+  \section{Experience}
+    \resumeSubHeadingListStart
+      \BLOCK{for experience_entry in experience}
+      \resumeSubheading
+        {\VAR{experience_entry.title}}{\VAR{experience_entry.dates}}
+        {\VAR{experience_entry.organization}}{\VAR{experience_entry.location}}
+        \resumeItemListStart
+        \BLOCK{for bullet in experience_entry.bullets}
+          \resumeItem{\VAR{bullet}}
+        \BLOCK{endfor}
+        \resumeItemListEnd
+      \BLOCK{endfor}
+    \resumeSubHeadingListEnd
+\BLOCK{endif}
+
+\BLOCK{if projects}
+  \section{Projects}
+      \resumeSubHeadingListStart
+        \BLOCK{for project in projects}
+        \resumeProjectHeading
+            {\textbf{\VAR{project.name}} $|$ \emph{\VAR{project.tech_stack}}}{\VAR{project.dates}}
+            \resumeItemListStart
+            \BLOCK{for bullet in project.bullets}
+              \resumeItem{\VAR{bullet}}
+            \BLOCK{endfor}
+            \resumeItemListEnd
+        \BLOCK{endfor}
+      \resumeSubHeadingListEnd
+\BLOCK{endif}
+
+\BLOCK{if skills}
+  \section{Technical Skills}
+   \begin{itemize}[leftmargin=0.15in, label={}]
+      \small{\item{
+       \BLOCK{for skill_group in skills}
+       \textbf{\VAR{skill_group["category"]}}{: \VAR{skill_group["items"] | join(', ')} } \\
+       \BLOCK{endfor}
+      }}
+   \end{itemize}
+\BLOCK{endif}
+
+\end{document}

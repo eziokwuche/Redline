@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database / local state
+*.sqlite3
+ats.db
+test_ats.db
+
+# Build / coverage
+.coverage
+htmlcov/
+
+# Frontend dependencies and local PDF/debug artifacts
+frontend/node_modules/
+tmp/
+*.docx
+*.pdf
+headers_*.txt
+*-headers.txt
+*_headers.txt
+*_payload.json
+*_response.json
+temp_render_*
+timeout_*.txt
+
+# Project uploads
+storage/uploads/*
+!storage/uploads/.gitkeep
