@@ -44,6 +44,26 @@ export async function gradeResume(resumeId, jobDescriptionId) {
   return res.json()
 }
 
+export async function rescanResume(resumeId, profile, jobDescriptionId, targetCompany) {
+  const res = await fetch(`${BASE}/resumes/${resumeId}/rescan`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      profile,
+      job_description_id: jobDescriptionId,
+      ...(targetCompany ? { target_company: targetCompany } : {}),
+    }),
+  })
+  if (!res.ok) throw new Error(await extractError(res))
+  return res.json()
+}
+
+export async function compileResume(resumeId) {
+  const res = await fetch(`${BASE}/resumes/${resumeId}/compile`, { method: 'POST' })
+  if (!res.ok) throw new Error(await extractError(res))
+  return res.blob()
+}
+
 export async function compareVersions(previousGradingId, currentGradingId) {
   const res = await fetch(`${BASE}/compare`, {
     method: 'POST',

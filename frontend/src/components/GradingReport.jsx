@@ -39,14 +39,14 @@ function Annotation({ kind, category, children }) {
   )
 }
 
-export default function GradingReport({ result, onRevise, onSkipRevise }) {
+export default function GradingReport({ result, onRestart }) {
   const {
-    overall_match_score: overall,
+    overall_score: overall,
     score_breakdown: breakdown,
     strengths,
-    areas_for_improvement: improvements,
+    improvements,
     missing_keywords: missingKeywords,
-    ats_compatibility_flags: atsFlags,
+    ats_flags: atsFlags,
   } = result
 
   return (
@@ -116,10 +116,7 @@ export default function GradingReport({ result, onRevise, onSkipRevise }) {
       )}
 
       <div className="report-actions">
-        <button className="btn-primary" onClick={onRevise}>
-          Upload a revised resume
-        </button>
-        <button className="btn-ghost" onClick={onSkipRevise}>
+        <button className="btn-primary" onClick={onRestart}>
           Start over
         </button>
       </div>

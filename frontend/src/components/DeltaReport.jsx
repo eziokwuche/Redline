@@ -1,3 +1,4 @@
+// Reconnect this report when the profile editor creates two GradingResults via /rescan.
 function DeltaBadge({ delta }) {
   const positive = delta > 0
   const flat = delta === 0
