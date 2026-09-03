@@ -15,7 +15,7 @@ export default function ResumeUpload({ title, subtitle, onUpload, loading, error
       {subtitle && <p className="panel-subtitle">{subtitle}</p>}
 
       <div
-        className={`dropzone ${dragOver ? 'dropzone-active' : ''}`}
+        className={`dropzone ${dragOver ? 'dropzone-active' : ''} ${loading ? 'dropzone-loading' : ''}`}
         onDragOver={(e) => {
           e.preventDefault()
           setDragOver(true)
@@ -26,7 +26,7 @@ export default function ResumeUpload({ title, subtitle, onUpload, loading, error
           setDragOver(false)
           handleFile(e.dataTransfer.files?.[0])
         }}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => !loading && inputRef.current?.click()}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {

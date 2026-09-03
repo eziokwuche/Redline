@@ -42,7 +42,7 @@ export default function JobDescriptionForm({ onSubmit, loading, error }) {
         {error && <p className="field-error">{error}</p>}
 
         <button type="submit" className="btn-primary" disabled={loading || rawText.trim().length < 50}>
-          {loading ? 'Grading…' : 'Continue to diagnosis'}
+          {loading ? <><span className="button-spinner" aria-hidden="true" />Building diagnosis…</> : 'Continue to diagnosis'}
         </button>
       </form>
     </section>

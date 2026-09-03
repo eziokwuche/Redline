@@ -63,6 +63,9 @@ export default function App() {
   }
 
   const latestGrading = state.gradings[state.gradings.length - 1]
+  const loadingCopy = state.step === 'upload'
+    ? ['Reading your resume', 'Extracting text and building your profile…']
+    : ['Scoring your resume', 'Comparing skills, experience, and keywords…']
 
   return (
     <div className="app-shell">
@@ -93,6 +96,7 @@ export default function App() {
           />
         )}
       </main>
+      {loading && <div className="loading-layer" role="status" aria-live="polite"><div className="loading-card"><span className="loading-orb" /><p>REDLINE IS WORKING</p><h2>{loadingCopy[0]}</h2><span>{loadingCopy[1]}</span><div className="buffer-track"><i /></div></div></div>}
 
       <footer className="app-footer">
         <span>session {state.sessionId ? state.sessionId.slice(0, 8) : '—'}</span>
