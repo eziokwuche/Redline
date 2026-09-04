@@ -76,7 +76,7 @@ In a second terminal, start the frontend:
 .\start-frontend.ps1
 ```
 
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API documentation is at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+Use the Redline application at [http://127.0.0.1:5173](http://127.0.0.1:5173). Explore the interactive API documentation at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
 ## API lifecycle
 
