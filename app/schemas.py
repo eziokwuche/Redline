@@ -146,6 +146,23 @@ class ResumeProfile(BaseModel):
     skills: list[SkillCategory]
 
 
+class ResumeDraftLLMResponse(BaseModel):
+    profile: ResumeProfile
+    changes_summary: list[str] = Field(..., max_length=8)
+    factual_claims_to_verify: list[str] = Field(..., max_length=8)
+
+
+class ResumeDraftRequest(BaseModel):
+    job_description_id: int = Field(..., gt=0)
+    target_company: Optional[str] = None
+
+
+class ResumeDraftResponse(ResumeDraftLLMResponse):
+    resume_id: int
+    job_description_id: int
+    current_profile: ResumeProfile
+
+
 class RescanRequest(BaseModel):
     profile: ResumeProfile
     job_description_id: int

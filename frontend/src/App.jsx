@@ -2,10 +2,11 @@ import { useState } from 'react'
 import ResumeUpload from './components/ResumeUpload.jsx'
 import JobDescriptionForm from './components/JobDescriptionForm.jsx'
 import GradingReport from './components/GradingReport.jsx'
-import { uploadResume, createJobDescription, gradeResume } from './api.js'
+import ResumeEditor from './components/ResumeEditor.jsx'
+import { uploadResume, createJobDescription, createResumeDraft, compileResume, gradeResume, rescanResume } from './api.js'
 
 const initialState = {
-  step: 'upload', // upload | job | report
+  step: 'upload', // upload | job | report | editor
   sessionId: null,
   job: null,
   pendingResume: null,
@@ -62,9 +63,64 @@ export default function App() {
     }
   }
 
+  const handleCreateDraft = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const draft = await createResumeDraft(latestGrading.resumeId, state.job.id)
+      patch({ draft, step: 'editor' })
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleApplyDraft = async (profile) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const gradingRes = await rescanResume(latestGrading.resumeId, profile, state.job.id)
+      patch({
+        gradings: [...state.gradings, {
+          resumeId: latestGrading.resumeId,
+          version: latestGrading.version,
+          gradingId: gradingRes.id,
+          result: gradingRes,
+        }],
+        draft: null,
+        step: 'report',
+      })
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const pdf = await compileResume(latestGrading.resumeId)
+      const url = URL.createObjectURL(pdf)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'redline-resume.pdf'
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const latestGrading = state.gradings[state.gradings.length - 1]
   const loadingCopy = state.step === 'upload'
     ? ['Reading your resume', 'Extracting text and building your profile…']
+    : state.step === 'editor'
+      ? ['Saving your approved changes', 'Creating a new version and rescanning it…']
     : ['Scoring your resume', 'Comparing skills, experience, and keywords…']
 
   return (
@@ -92,7 +148,20 @@ export default function App() {
         {state.step === 'report' && latestGrading && (
           <GradingReport
             result={latestGrading.result}
+            onCreateDraft={handleCreateDraft}
+            onDownloadPdf={state.gradings.length > 1 ? handleDownloadPdf : null}
             onRestart={restart}
+            error={error}
+          />
+        )}
+
+        {state.step === 'editor' && state.draft && (
+          <ResumeEditor
+            draft={state.draft}
+            onApply={handleApplyDraft}
+            onBack={() => { setError(null); patch({ step: 'report' }) }}
+            loading={loading}
+            error={error}
           />
         )}
       </main>

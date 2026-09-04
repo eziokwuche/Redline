@@ -1,5 +1,5 @@
-from app.schemas import CategoryDelta, DeltaLLMResponse, DeltaQualitativeResponse, GradingLLMResponse, ResumeProfile
-from app.services.prompts import build_delta_prompt, build_grading_prompt, build_profile_extraction_prompt
+from app.schemas import CategoryDelta, DeltaLLMResponse, DeltaQualitativeResponse, GradingLLMResponse, ResumeDraftLLMResponse, ResumeProfile
+from app.services.prompts import build_delta_prompt, build_grading_prompt, build_profile_extraction_prompt, build_resume_draft_prompt
 
 
 def grade_resume(provider, resume_text: str, job_text: str, target_company: str | None = None) -> GradingLLMResponse:
@@ -59,6 +59,17 @@ def compare_versions(
 def extract_profile(provider, raw_text: str) -> ResumeProfile:
     system_prompt, user_prompt = build_profile_extraction_prompt(raw_text)
     return provider.generate_json(system_prompt, user_prompt, ResumeProfile)
+
+
+def generate_resume_draft(
+    provider,
+    profile: ResumeProfile,
+    job_text: str,
+    latest_grading: object | None = None,
+    target_company: str | None = None,
+) -> ResumeDraftLLMResponse:
+    system_prompt, user_prompt = build_resume_draft_prompt(profile, job_text, latest_grading, target_company)
+    return provider.generate_json(system_prompt, user_prompt, ResumeDraftLLMResponse)
 
 
 def profile_to_text(profile: ResumeProfile) -> str:

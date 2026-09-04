@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from app.models import DeltaComparison, JobDescription, Resume, UserSession
+from app.models import DeltaComparison, JobDescription, Resume, ResumeRevision, UserSession
 
 
 def mock_result_model():
@@ -231,3 +231,75 @@ def test_compare_endpoint_persists_delta_for_two_grading_results(client, db_sess
     assert payload['current_grading_id'] == second.json()['id']
     assert payload['verdict'] == 'The updated resume is stronger.'
     assert db_session.query(DeltaComparison).count() == 1
+
+
+def test_draft_is_reviewable_and_only_rescan_persists_approved_revision(client, db_session):
+    session = UserSession(id='session-draft')
+    profile = {
+        'name': 'Taylor Example',
+        'phone': '555-0100',
+        'email': 'taylor@example.com',
+        'linkedin': None,
+        'github': None,
+        'education': [],
+        'experience': [{
+            'title': 'Software Engineer',
+            'organization': 'Example Co',
+            'location': 'Remote',
+            'dates': '2023–Present',
+            'bullets': ['Built Python APIs for internal teams.'],
+        }],
+        'projects': [],
+        'skills': [{'category': 'Languages', 'items': ['Python', 'SQL']}],
+    }
+    resume = Resume(
+        session_id=session.id,
+        version=1,
+        original_filename='resume.docx',
+        file_type='docx',
+        raw_text='Taylor Example built Python APIs.',
+        extraction_method='python-docx',
+        profile_json=profile,
+    )
+    job = JobDescription(
+        session_id=session.id,
+        title='Backend Engineer',
+        raw_text='Need Python API development and SQL.',
+    )
+    db_session.add_all([session, resume, job])
+    db_session.commit()
+    db_session.refresh(resume)
+    db_session.refresh(job)
+
+    class DraftProvider:
+        name = 'mock'
+        model = 'draft-model'
+
+        def generate_json(self, system_prompt, user_prompt, response_model):
+            if response_model.__name__ == 'ResumeDraftLLMResponse':
+                return response_model.model_validate({
+                    'profile': profile,
+                    'changes_summary': ['Tightened the API delivery bullet.'],
+                    'factual_claims_to_verify': [],
+                })
+            return response_model.model_validate(mock_result_model())
+
+    with patch('app.routers.grade.get_llm_provider', return_value=DraftProvider()):
+        draft_response = client.post(
+            f'/api/resumes/{resume.id}/draft',
+            json={'job_description_id': job.id},
+        )
+
+        assert draft_response.status_code == 200
+        assert draft_response.json()['profile']['name'] == 'Taylor Example'
+        assert db_session.query(ResumeRevision).count() == 0
+
+        rescan_response = client.post(
+            f'/api/resumes/{resume.id}/rescan',
+            json={'profile': draft_response.json()['profile'], 'job_description_id': job.id},
+        )
+
+    assert rescan_response.status_code == 200
+    revision = db_session.query(ResumeRevision).one()
+    assert revision.source == 'user-approved'
+    assert revision.profile_json['experience'][0]['title'] == 'Software Engineer'

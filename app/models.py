@@ -55,6 +55,17 @@ class GradingResult(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class ResumeRevision(Base):
+    __tablename__ = 'resume_revisions'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    resume_id: Mapped[int] = mapped_column(ForeignKey('resumes.id'), nullable=False, index=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    source: Mapped[str] = mapped_column(String(50), nullable=False)
+    profile_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class DeltaComparison(Base):
     __tablename__ = 'delta_comparisons'
 

@@ -520,6 +520,22 @@ textarea {
   padding-top: 20px;
 }
 
+/* --- Resume editor --- */
+
+.editor-panel { max-width: 860px; }
+.editor-form { display: flex; flex-direction: column; gap: 24px; }
+.editor-section { border-top: 1px solid var(--rule); padding-top: 20px; }
+.editor-section-header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.editor-section-header h3 { margin: 0; font-size: 15px; }
+.editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.editor-entry { padding: 14px 0; border-top: 1px solid var(--rule); }
+.editor-entry:first-of-type { border-top: 0; padding-top: 0; }
+.editor-entry .field { margin-top: 12px; }
+.text-button { padding: 0; border: 0; background: transparent; color: var(--redline); cursor: pointer; font: 600 12px var(--font-mono); }
+.draft-notes { margin: 20px 0 24px; padding: 14px 16px; border-left: 3px solid var(--warn); border-radius: 0 8px 8px 0; background: var(--warn-soft); font-size: 13px; }
+.draft-notes strong { display: block; margin-top: 10px; }.draft-notes strong:first-child { margin-top: 0; }.draft-notes ul { margin: 5px 0 0; padding-left: 19px; }
+.editor-actions { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--rule); padding-top: 20px; }
+
 /* --- Delta report --- */
 
 .verdict {
@@ -578,4 +594,7 @@ textarea {
   .gauge-row {
     grid-template-columns: 110px 1fr 28px;
   }
+
+  .editor-grid { grid-template-columns: 1fr; }
+  .editor-actions { flex-direction: column-reverse; }
 }

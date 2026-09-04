@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import GradingResult, JobDescription, Resume
-from app.schemas import GradingLLMResponse, GradingRequest, GradingResponse, RescanRequest
-from app.services.grading import grade_resume, profile_to_text
+from app.models import GradingResult, JobDescription, Resume, ResumeRevision
+from app.schemas import ResumeDraftRequest, ResumeDraftResponse, GradingLLMResponse, GradingRequest, GradingResponse, RescanRequest, ResumeProfile
+from app.services.grading import generate_resume_draft, grade_resume, profile_to_text
 from app.services.llm_client import LLMGenerationError, get_llm_provider
 
 router = APIRouter()
@@ -67,6 +68,63 @@ async def grade_resume_endpoint(
     )
 
 
+@router.post('/resumes/{resume_id}/draft', response_model=ResumeDraftResponse)
+async def create_resume_draft(
+    resume_id: int,
+    request: ResumeDraftRequest,
+    db: Session = Depends(get_db),
+):
+    """Generate a proposed profile. It is never saved until the user submits it to /rescan."""
+    resume = db.query(Resume).filter(Resume.id == resume_id).first()
+    if resume is None:
+        raise HTTPException(status_code=404, detail='Resume not found.')
+    if not resume.profile_json:
+        raise HTTPException(status_code=422, detail='Resume has no structured profile available for editing.')
+
+    job = db.query(JobDescription).filter(JobDescription.id == request.job_description_id).first()
+    if job is None:
+        raise HTTPException(status_code=404, detail='Job description not found.')
+
+    try:
+        profile = ResumeProfile.model_validate(resume.profile_json)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail='Stored resume profile is invalid and cannot be edited.') from exc
+
+    latest_grading = (
+        db.query(GradingResult)
+        .filter(
+            GradingResult.resume_id == resume_id,
+            GradingResult.job_description_id == request.job_description_id,
+        )
+        .order_by(GradingResult.created_at.desc(), GradingResult.id.desc())
+        .first()
+    )
+    grading_context = latest_grading.raw_response.get('grading') if latest_grading else None
+
+    try:
+        provider = get_llm_provider()
+        draft = generate_resume_draft(
+            provider,
+            profile,
+            job.raw_text,
+            grading_context,
+            request.target_company,
+        )
+    except LLMGenerationError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return ResumeDraftResponse(
+        resume_id=resume_id,
+        job_description_id=request.job_description_id,
+        current_profile=profile,
+        profile=draft.profile,
+        changes_summary=draft.changes_summary,
+        factual_claims_to_verify=draft.factual_claims_to_verify,
+    )
+
+
 # Post-edit grading: persist the submitted ResumeProfile, grade its formatted text, and
 # persist the result. Comparison lookup is deferred to /compare (Part 1.6); "prior
 # grading" means the most recent GradingResult by created_at for this
@@ -91,9 +149,23 @@ async def rescan_resume_with_profile(
     if job is None:
         raise HTTPException(status_code=404, detail='Job description not found.')
     
-    # Update the stored profile_json
+    # Save only the user-submitted (and therefore approved) profile as the latest revision.
     resume.profile_json = request.profile.model_dump(mode='json')
-    db.add(resume)
+    next_revision = (
+        db.query(func.coalesce(func.max(ResumeRevision.revision), 0))
+        .filter(ResumeRevision.resume_id == resume.id)
+        .scalar()
+        or 0
+    ) + 1
+    db.add_all([
+        resume,
+        ResumeRevision(
+            resume_id=resume.id,
+            revision=next_revision,
+            source='user-approved',
+            profile_json=request.profile.model_dump(mode='json'),
+        ),
+    ])
     db.commit()
     
     # Convert the edited profile to text for grading

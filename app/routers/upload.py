@@ -14,7 +14,7 @@ import logging
 
 from app.config import settings
 from app.database import get_db
-from app.models import JobDescription, Resume, UserSession
+from app.models import JobDescription, Resume, ResumeRevision, UserSession
 from app.schemas import JobDescriptionCreate, ResumeUploadResponse
 from app.services.grading import extract_profile
 from app.services.latex_renderer import render_resume_template
@@ -116,6 +116,17 @@ async def upload_resume(
     db.add(resume)
     db.commit()
     db.refresh(resume)
+
+    if profile_payload is not None:
+        db.add(
+            ResumeRevision(
+                resume_id=resume.id,
+                revision=1,
+                source='extraction',
+                profile_json=profile_payload,
+            )
+        )
+        db.commit()
 
     return ResumeUploadResponse(
         id=resume.id,

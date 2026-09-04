@@ -39,7 +39,7 @@ function Annotation({ kind, category, children }) {
   )
 }
 
-export default function GradingReport({ result, onRestart }) {
+export default function GradingReport({ result, onCreateDraft, onDownloadPdf, onRestart, error }) {
   const {
     overall_score: overall,
     score_breakdown: breakdown,
@@ -116,10 +116,17 @@ export default function GradingReport({ result, onRestart }) {
       )}
 
       <div className="report-actions">
+        <button className="btn-primary" onClick={onCreateDraft}>
+          Create tailored draft
+        </button>
+        {onDownloadPdf && <button className="btn-ghost" onClick={onDownloadPdf}>
+          Download approved PDF
+        </button>}
         <button className="btn-primary" onClick={onRestart}>
           Start over
         </button>
       </div>
+      {error && <p className="field-error">{error}</p>}
     </section>
   )
 }

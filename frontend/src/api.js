@@ -58,6 +58,19 @@ export async function rescanResume(resumeId, profile, jobDescriptionId, targetCo
   return res.json()
 }
 
+export async function createResumeDraft(resumeId, jobDescriptionId, targetCompany) {
+  const res = await fetch(`${BASE}/resumes/${resumeId}/draft`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      job_description_id: jobDescriptionId,
+      ...(targetCompany ? { target_company: targetCompany } : {}),
+    }),
+  })
+  if (!res.ok) throw new Error(await extractError(res))
+  return res.json()
+}
+
 export async function compileResume(resumeId) {
   const res = await fetch(`${BASE}/resumes/${resumeId}/compile`, { method: 'POST' })
   if (!res.ok) throw new Error(await extractError(res))
