@@ -19,7 +19,7 @@ FastAPI + SQLite power the backend; React + Vite power the frontend. LLM extract
 ## Current limitations
 
 - The frontend does not yet expose the profile editor, rescan, comparison, or PDF-download controls. The API support is ready; the editor UI is next.
-- SQLite is the default local database. PostgreSQL and Alembic are scaffolded for a later migration.
+- SQLite is the local database. Database migrations and PostgreSQL support are intentionally deferred until the schema stabilizes.
 - PDF compilation requires a local LaTeX installation, such as MiKTeX, with `pdflatex` available to the backend process.
 - Authentication and multi-user SaaS features are out of scope.
 
